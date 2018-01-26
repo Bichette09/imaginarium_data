@@ -20,10 +20,10 @@ build ros (or use a prebuild release)
 	mkdir -p ~/ros_catkin_ws
 	cd ~/ros_catkin_ws
 	
-	rosinstall_generator desktop perception robot viz rosauth rosbridge_suite mongodb_store --rosdistro kinetic --deps --wet-only --exclude perception_pcl pcl_conversions pcl_msgs collada_parser collada_urdf rviz dynpick_driver ensenso grid_map_rviz_plugin librviz_tutorial moveit_ros_visualiza mrpt_ekf_slam_2d mrpt_ekf_slam_3d mrpt_icp_slam_2d mrpt_rbpf_slam osm_cartography rqt_rviz rtabmap_ros rviz_imu_plugin rviz_plugin_tutorial rviz_python_tutorial rviz_visual_tools urdf_sim_tutorial urdf_tutorial viz rviz_plugin_tutorials visualization_marker_tutorials visualization_tutorials interactive_marker_tutorials actionlib_tutorials nodelet_tutorial_math pluginlib_tutorials --tar > kinetic-wet.rosinstall
+	rosinstall_generator desktop perception robot viz rosauth rosbridge_suite rosdoc_lite video_stream_opencv web_video_server --rosdistro kinetic --deps --wet-only --exclude perception_pcl pcl_conversions pcl_msgs collada_parser collada_urdf rviz dynpick_driver ensenso grid_map_rviz_plugin librviz_tutorial moveit_ros_visualiza mrpt_ekf_slam_2d mrpt_ekf_slam_3d mrpt_icp_slam_2d mrpt_rbpf_slam osm_cartography rqt_rviz rtabmap_ros rviz_imu_plugin rviz_plugin_tutorial rviz_python_tutorial rviz_visual_tools urdf_sim_tutorial urdf_tutorial viz rviz_plugin_tutorials visualization_marker_tutorials visualization_tutorials interactive_marker_tutorials actionlib_tutorials nodelet_tutorial_math pluginlib_tutorials --tar > kinetic-wet.rosinstall
 	
 	wstool init src kinetic-wet.rosinstall -j2
-	rosdep install -y --from-paths src --ignore-src --rosdistro kinetic -r --os=debian:jessie
+	rosdep install -y --from-paths src --ignore-src --rosdistro kinetic -r --os=debian:stretch
 	sudo apt-get install libgtk2.0-dev
 	sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/kinetic -j2
 	echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
@@ -38,10 +38,10 @@ install from gzip
 
 
 other dependencies
-	apt-get install mongodb-server lighttpd
+	apt-get install lighttpd
 	sudo pip install pymongo 
-	sudo pip install twisted 
+	sudo pip install twisted
+	sudo pip install kitchen   
 
 edit following file to setup webserver /etc/lighttpd/lighttpd.conf
-
 
