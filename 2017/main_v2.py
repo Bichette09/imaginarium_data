@@ -282,18 +282,24 @@ if __name__ == '__main__':
 
 				# angle between robot and runway
 				# retrait du capteur arriere (cm)
-				r = 2.8
+				rd = 1.9
+				ld = 1.6
 				# distance entre le capteur arriere et avant (cm)
-				L = 36.0
+				rL = 37.5
+				lL = 37.5
 				lRightAngle = 0.
 				if lMap.mLastFilteredSensorInput[1]>0. and lMap.mLastFilteredSensorInput[0]>0.:
-					lRightAngle = -math.atan((lMap.mLastFilteredSensorInput[1]-(lMap.mLastFilteredSensorInput[0]+r))/L)*180/math.pi
+					lRightAngle = -1.5-math.atan((lMap.mLastFilteredSensorInput[1]-(lMap.mLastFilteredSensorInput[0]+rd))/rL)*180/math.pi
 				lLeftAngle = 0.
 				if lMap.mLastFilteredSensorInput[8]>0. and lMap.mLastFilteredSensorInput[9]>0.:
-					lLeftAngle =  math.atan((lMap.mLastFilteredSensorInput[8]-(lMap.mLastFilteredSensorInput[9]+r))/L)*180/math.pi
+					lLeftAngle =  math.atan((lMap.mLastFilteredSensorInput[8]-(lMap.mLastFilteredSensorInput[9]+ld))/lL)*180/math.pi
 
 
-				#print "rightAngle:"+str(lRightAngle)+" leftAngle:"+str(lLeftAngle)
+				#print "rightAngle:"+str(lRightAngle)+"\t leftAngle:"+str(lLeftAngle)
+				#print "Dist8:"+str(lMap.mLastFilteredSensorInput[8])+"\t Dist9:"+str(lMap.mLastFilteredSensorInput[9])
+				#print "Dist1:"+str(lMap.mLastFilteredSensorInput[1])+"\t Dist0:"+str(lMap.mLastFilteredSensorInput[0])
+
+				#time.sleep(1)
 				# compute speed
 				if lIsAutomaticMode:
 					lMaxSpeed = 1.5
@@ -316,12 +322,19 @@ if __name__ == '__main__':
 				lLastAngle = 0.
 				if lLeftDist != 0 and lRightDist != 0:
 				#Angle control law
-					lKp = 0.0  #Proportional gain
+					lKp = 1.0  #Proportional gain
 					erreur= (lRightDist-lLeftDist)
 					#Proportional term
 					lProp= erreur* lKp
 					#precommande (moyenne des directions des bords)
-					lPrec = 0.5*lRightAngle+0.5*lLeftAngle
+					#lPrec = 0.5*lRightAngle+0.5*lLeftAngle
+					if lRightAngle>0 and lLeftAngle>0:					
+						lPrec = 1.0*min(lRightAngle,lLeftAngle)
+					elif lRightAngle<0 and lLeftAngle<0:					
+						lPrec = 1.0*max(lRightAngle,lLeftAngle)
+					else:
+						lPrec = 0.0
+					
 					# synthese of all terms
 					lLastAngle = lPrec + lProp
 					
