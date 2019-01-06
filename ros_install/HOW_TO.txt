@@ -1,6 +1,6 @@
 this file regroup informations on how to build/install ros on raspbian
 	https://answers.ros.org/question/229788/how-to-building-pcl-laser_scan_matcher-on-raspberry-pi-2/
-	http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Kinetic%20on%20the%20Raspberry%20Pi
+	http://wiki.ros.org/ROSberryPi/Installing%20ROS%20melodic%20on%20the%20Raspberry%20Pi
 	http://www.ros.org/reps/rep-0142.html
 
 increase swap size => /etc/dphys-swapfile CONF_SWAPSIZE=1024
@@ -16,25 +16,85 @@ install ros dependencies
 	sudo rosdep init
 	rosdep update
 
-build ros (or use a prebuild release)
-	mkdir -p ~/ros_catkin_ws
-	cd ~/ros_catkin_ws
+COMPILE PART (see INSTALL FROM ARCHIVE)
+		
 	
-	rosinstall_generator desktop perception robot viz rosauth rosbridge_suite rosdoc_lite video_stream_opencv web_video_server cv_bridge --rosdistro kinetic --deps --wet-only --exclude perception_pcl pcl_conversions pcl_msgs collada_parser collada_urdf rviz dynpick_driver ensenso grid_map_rviz_plugin librviz_tutorial moveit_ros_visualiza mrpt_ekf_slam_2d mrpt_ekf_slam_3d mrpt_icp_slam_2d mrpt_rbpf_slam osm_cartography rqt_rviz rtabmap_ros rviz_imu_plugin rviz_plugin_tutorial rviz_python_tutorial rviz_visual_tools urdf_sim_tutorial urdf_tutorial viz rviz_plugin_tutorials visualization_marker_tutorials visualization_tutorials interactive_marker_tutorials actionlib_tutorials nodelet_tutorial_math pluginlib_tutorials --tar > kinetic-wet.rosinstall
+	opencv dependencies
+		sudo apt-get install build-essential cmake pkg-config
+		sudo apt-get install libjpeg-dev libtiff5-dev libjasper-dev libpng12-dev
+		sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+		sudo apt-get install libxvidcore-dev libx264-dev
+		sudo apt-get install libgtk2.0-dev libgtk-3-dev
+		sudo apt-get install libatlas-base-dev gfortran
+		sudo apt-get install libhdf5-dev libsz2 libjasper-dev
 	
-	wstool init src kinetic-wet.rosinstall -j2
-	rosdep install -y --from-paths src --ignore-src --rosdistro kinetic -r --os=debian:$(lsb_release -sc)
-	sudo apt-get install libgtk2.0-dev
-	sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/kinetic -j2
-	echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+	compile opencv3
+		(https://www.alatortsev.com/2018/09/05/installing-opencv-3-4-3-on-raspberry-pi-3-b/)
+		
+		mkdir ~/opencv
+		cd ~/opencv
+		
+		wget -O opencv.zip https://github.com/opencv/opencv/archive/3.4.5.zip
+		wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/3.4.5.zip
+		unzip opencv.zip
+		unzip opencv_contrib.zip
+		
+		mkdir build
+		cd build
+		
+		to pack result change CMAKE_INSTALL_PREFIX
+		
+		cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D INSTALL_PYTHON_EXAMPLES=OFF -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib-3.4.5/modules -D BUILD_EXAMPLES=OFF ..
+	
+	pack result
+		cd ~/opencv/install
+		tar czpvf opencv3_rpi.tar.gz install/*
 
-pack result 
-	cd /opt/ros
-	tar czpvf ros_kinetic.tar.gz kinetic
+	build ros (or use a prebuild release)
+		mkdir -p ~/ros_catkin_ws
+		cd ~/ros_catkin_ws
+		
+		rosinstall_generator desktop perception robot viz rosauth rosbridge_suite rosdoc_lite video_stream_opencv async_web_server_cpp image_transport cv_bridge --rosdistro melodic --deps --wet-only --exclude perception_pcl pcl_conversions pcl_msgs collada_parser collada_urdf rviz dynpick_driver ensenso grid_map_rviz_plugin librviz_tutorial moveit_ros_visualiza mrpt_ekf_slam_2d mrpt_ekf_slam_3d mrpt_icp_slam_2d mrpt_rbpf_slam osm_cartography rqt_rviz rtabmap_ros rviz_imu_plugin rviz_plugin_tutorial rviz_python_tutorial rviz_visual_tools urdf_sim_tutorial urdf_tutorial viz rviz_plugin_tutorials visualization_marker_tutorials visualization_tutorials interactive_marker_tutorials actionlib_tutorials nodelet_tutorial_math pluginlib_tutorials python_qt_binding rosauth orocos_kinematics_dynamics geometry_tutorials urdf roslisp roslisp xacro rosdoc_lite ros_tutorials rospy_tutorials executive_smach turtlesim common_tutorials turtle_actionlib diagnostics urdf_parser_plugin urdfdom_py robot_state_publisher python_orocos_kdl kdl_parser_py kdl_parser orocos_kdl joint_state_publisher image_view stereo_image_proc camera_calibration image_rotate tf_conversions kdl_conversions eigen_conversions geneus genlisp depth_image_proc --tar > melodic-wet.rosinstall
+		
+		wstool init src melodic-wet.rosinstall -j2
+			to update workspace
+				wstool merge melodic-wet.rosinstall -t src
+				wstool update -j 4 -t src
+		
+		rm -rf src/geometry/eigen_conversions src/kdl_parser/ src/image_pipeline/depth_image_proc
+		
+		wget -O web_video_server.zip https://github.com/RobotWebTools/web_video_server/archive/0.1.0.zip
+		unzip web_video_server.zip
+		mv web_video_server-0.1.0/ src/
+		
+		rosdep install -y --from-paths src --ignore-src --rosdistro melodic -r --os=debian:$(lsb_release -sc)
+		
+		sudo apt-get install libgtk2.0-dev
+		sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/melodic -j2
+		
+		patch package.xml
+			find bad packages by using rospack list
+			https://github.com/ros/rospack/issues/77
+			replace 
+				<?xml version="1.0"?>
+				<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+				<package format="2">
+			by
+				<?xml version="1.0"?>
+				<package format="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema" xsi:noNamespaceSchemaLocation="http://download.ros.org/schema/package_format2.xsd" >
+				
+			
+		echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
 
-install from gzip
-	sudo tar -xzvf ros_kinetic.tar.gz -C /opt/ros
-	echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+	pack result 
+		cd /opt/ros
+		tar czpvf ros_melodic.tar.gz melodic
+
+INSTALL FROM ARCHIVE
+	
+	sudo tar -xzvf opencv3_rpi.tar.gz -C /usr/local
+	sudo tar -xzvf ros_melodic.tar.gz -C /opt/ros
+	echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
 
 
 other dependencies
