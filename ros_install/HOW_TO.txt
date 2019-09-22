@@ -74,6 +74,8 @@ COMPILE PART (see INSTALL FROM ARCHIVE)
 		
 		patch package.xml
 			find bad packages by using rospack list
+			sudo find . -type f -exec grep -H 'schematypens=' {} \;
+			
 			https://github.com/ros/rospack/issues/77
 			replace 
 				<?xml version="1.0"?>
